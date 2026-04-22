@@ -9,6 +9,9 @@ on:
       - "v*"
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   pack-and-publish:
     runs-on: windows-latest
@@ -21,6 +24,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Resolve package version and tag
+        run: |
+          if ("${{ github.ref }}".StartsWith("refs/tags/")) {
+            $tag = "${{ github.ref_name }}"
+            $version = $tag.TrimStart('v')
+          } else {
+            $version = "1.0.0-ci.${{ github.run_number }}"
+            $tag = "v1.0.0-ci.$(Get-Date -Format 'yyyyMMddHHmmss')-${{ github.run_number }}"
+          }
+          "PACKAGE_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "PACKAGE_TAG=$tag" | Out-File -FilePath $env:GITHUB_ENV -Append
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
@@ -30,10 +45,10 @@ jobs:
         run: dotnet restore "src/EntityFrameworkCore.Sqlite.Legacy/EntityFrameworkCore.Sqlite.Legacy.csproj"
 
       - name: Build
-        run: dotnet build "src/EntityFrameworkCore.Sqlite.Legacy/EntityFrameworkCore.Sqlite.Legacy.csproj" -c Release --no-restore
+        run: dotnet build "src/EntityFrameworkCore.Sqlite.Legacy/EntityFrameworkCore.Sqlite.Legacy.csproj" -c Release --no-restore -p:Version="$env:PACKAGE_VERSION"
 
       - name: Pack
-        run: dotnet pack "src/EntityFrameworkCore.Sqlite.Legacy/EntityFrameworkCore.Sqlite.Legacy.csproj" -c Release --no-build -o artifacts
+        run: dotnet pack "src/EntityFrameworkCore.Sqlite.Legacy/EntityFrameworkCore.Sqlite.Legacy.csproj" -c Release --no-build -o artifacts -p:Version="$env:PACKAGE_VERSION"
 
       - name: Validate NuGet API key
         run: |
@@ -52,4 +67,12 @@ jobs:
             Write-Host "Publicando $($pkg.FullName)"
             dotnet nuget push "$($pkg.FullName)" --api-key "$env:NUGET_API_KEY" --source "https://api.nuget.org/v3/index.json" --skip-duplicate
           }
+
+      - name: Create tag for this commit
+        if: startsWith(github.ref, 'refs/heads/')
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag "$env:PACKAGE_TAG" "${{ github.sha }}"
+          git push origin "$env:PACKAGE_TAG"
 
