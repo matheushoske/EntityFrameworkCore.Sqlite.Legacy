@@ -4,10 +4,10 @@ NuGet-focused repository for legacy encrypted SQLite access through EF Core.
 
 ## Contains
 
-- `src/Plu.EntityFrameworkCore.Sqlite.Legacy`
-- `src/Plu.Sqlite.LegacyBridge.Ado`
-- `src/Plu.Sqlite.LegacyBridge.Client`
-- `src/Plu.Sqlite.LegacyBridge.Protocol`
+- `src/EntityFrameworkCore.Sqlite.Legacy`
+- `src/Sqlite.LegacyBridge.Ado`
+- `src/Sqlite.LegacyBridge.Client`
+- `src/Sqlite.LegacyBridge.Protocol`
 - `tests/Plu.LegacyBridge.Verify`
 
 ## Publish

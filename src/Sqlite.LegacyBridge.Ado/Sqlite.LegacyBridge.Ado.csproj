@@ -14,7 +14,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Plu.Sqlite.LegacyBridge.Client\Sqlite.LegacyBridge.Client.csproj" />
+    <ProjectReference Include="..\Sqlite.LegacyBridge.Client\Sqlite.LegacyBridge.Client.csproj" />
   </ItemGroup>
 
 </Project>

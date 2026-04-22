@@ -29,7 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Plu.Sqlite.LegacyBridge.Ado\Sqlite.LegacyBridge.Ado.csproj" />
+    <ProjectReference Include="..\Sqlite.LegacyBridge.Ado\Sqlite.LegacyBridge.Ado.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -38,9 +38,9 @@
 
   <Import Project="build\EntityFrameworkCore.Sqlite.Legacy.targets" />
 
-  <Target Name="PackLegacyHostIntoNupkg" BeforeTargets="GenerateNuspec" DependsOnTargets="Build;BuildLegacySqliteBridgeHost" Condition="Exists('$(MSBuildProjectDirectory)\..\Plu.Sqlite.LegacyBridge.Host\Sqlite.LegacyBridge.Host.csproj')">
+  <Target Name="PackLegacyHostIntoNupkg" BeforeTargets="GenerateNuspec" DependsOnTargets="Build;BuildLegacySqliteBridgeHost" Condition="Exists('$(MSBuildProjectDirectory)\..\Sqlite.LegacyBridge.Host\Sqlite.LegacyBridge.Host.csproj')">
     <ItemGroup>
-      <None Include="$(MSBuildProjectDirectory)\..\Plu.Sqlite.LegacyBridge.Host\bin\$(Configuration)\net481\**\*.*"
+      <None Include="$(MSBuildProjectDirectory)\..\Sqlite.LegacyBridge.Host\bin\$(Configuration)\net481\**\*.*"
             Pack="true"
             PackagePath="legacy/" />
     </ItemGroup>

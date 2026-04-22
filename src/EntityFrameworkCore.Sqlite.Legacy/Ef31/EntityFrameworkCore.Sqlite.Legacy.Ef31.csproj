@@ -20,7 +20,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="$(PluLegacyBridgeEf31Version)" />
-    <ProjectReference Include="..\..\Plu.Sqlite.LegacyBridge.Ado\Sqlite.LegacyBridge.Ado.csproj" />
+    <ProjectReference Include="..\..\Sqlite.LegacyBridge.Ado\Sqlite.LegacyBridge.Ado.csproj" />
   </ItemGroup>
 
   <Import Project="..\build\EntityFrameworkCore.Sqlite.Legacy.targets" />

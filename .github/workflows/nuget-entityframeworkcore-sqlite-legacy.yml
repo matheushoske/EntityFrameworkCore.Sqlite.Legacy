@@ -21,13 +21,13 @@ jobs:
           dotnet-version: "10.0.x"
 
       - name: Restore
-        run: dotnet restore "src/Plu.EntityFrameworkCore.Sqlite.Legacy/EntityFrameworkCore.Sqlite.Legacy.csproj"
+        run: dotnet restore "src/EntityFrameworkCore.Sqlite.Legacy/EntityFrameworkCore.Sqlite.Legacy.csproj"
 
       - name: Build
-        run: dotnet build "src/Plu.EntityFrameworkCore.Sqlite.Legacy/EntityFrameworkCore.Sqlite.Legacy.csproj" -c Release --no-restore
+        run: dotnet build "src/EntityFrameworkCore.Sqlite.Legacy/EntityFrameworkCore.Sqlite.Legacy.csproj" -c Release --no-restore
 
       - name: Pack
-        run: dotnet pack "src/Plu.EntityFrameworkCore.Sqlite.Legacy/EntityFrameworkCore.Sqlite.Legacy.csproj" -c Release --no-build -o artifacts
+        run: dotnet pack "src/EntityFrameworkCore.Sqlite.Legacy/EntityFrameworkCore.Sqlite.Legacy.csproj" -c Release --no-build -o artifacts
 
       - name: Publish NuGet
         if: startsWith(github.ref, 'refs/tags/')
