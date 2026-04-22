@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Plu.LegacyBridge.Verify</RootNamespace>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Plu.Sqlite.LegacyBridge.Ado\Sqlite.LegacyBridge.Ado.csproj" />
+    <ProjectReference Include="..\..\src\Plu.EntityFrameworkCore.Sqlite.Legacy\EntityFrameworkCore.Sqlite.Legacy.csproj" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Shared\IntegrationTestEnvironment.cs" Link="Shared\IntegrationTestEnvironment.cs" />
+  </ItemGroup>
+
+  <Import Project="..\..\src\Plu.EntityFrameworkCore.Sqlite.Legacy\build\EntityFrameworkCore.Sqlite.Legacy.targets" />
+
+</Project>

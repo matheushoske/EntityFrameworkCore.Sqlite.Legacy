@@ -1,0 +1,11 @@
+<Project>
+  <PropertyGroup>
+    <PluLegacyBridgeVersion>10.0.0</PluLegacyBridgeVersion>
+    <!-- EF Core alinhado ao TFM do pacote Plu.EntityFrameworkCore.Sqlite.Legacy -->
+    <PluLegacyBridgeEf31Version>3.1.32</PluLegacyBridgeEf31Version>
+    <PluLegacyBridgeEf10Version>10.0.0</PluLegacyBridgeEf10Version>
+    <Authors>PLU</Authors>
+    <PackageProjectUrl>https://github.com/local/plu</PackageProjectUrl>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+</Project>

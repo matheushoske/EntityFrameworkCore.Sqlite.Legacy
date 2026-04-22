@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net10.0</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>Sqlite.LegacyBridge.Ado</RootNamespace>
+    <AssemblyName>Sqlite.LegacyBridge.Ado</AssemblyName>
+    <IsPackable>true</IsPackable>
+    <PackageId>Sqlite.LegacyBridge.Ado</PackageId>
+    <Version>$(PluLegacyBridgeVersion)</Version>
+    <Description>ADO.NET DbConnection/DbCommand sobre o bridge SQLite legado.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Plu.Sqlite.LegacyBridge.Client\Sqlite.LegacyBridge.Client.csproj" />
+  </ItemGroup>
+
+</Project>

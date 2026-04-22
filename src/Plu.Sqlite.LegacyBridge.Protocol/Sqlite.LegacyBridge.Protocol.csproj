@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>Sqlite.LegacyBridge.Protocol</RootNamespace>
+    <AssemblyName>Sqlite.LegacyBridge.Protocol</AssemblyName>
+    <IsPackable>true</IsPackable>
+    <PackageId>Sqlite.LegacyBridge.Protocol</PackageId>
+    <Version>$(PluLegacyBridgeVersion)</Version>
+    <Description>Contratos JSON do bridge SQLite legado (net462 host / net10 cliente).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+  </ItemGroup>
+
+</Project>

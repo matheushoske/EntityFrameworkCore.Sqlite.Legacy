@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net10.0</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>Sqlite.LegacyBridge.Client</RootNamespace>
+    <AssemblyName>Sqlite.LegacyBridge.Client</AssemblyName>
+    <IsPackable>true</IsPackable>
+    <PackageId>Sqlite.LegacyBridge.Client</PackageId>
+    <Version>$(PluLegacyBridgeVersion)</Version>
+    <Description>Cliente named pipe NDJSON para Sqlite.LegacyBridge.Host (net462).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Plu.Sqlite.LegacyBridge.Protocol\Sqlite.LegacyBridge.Protocol.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+  </ItemGroup>
+
+</Project>

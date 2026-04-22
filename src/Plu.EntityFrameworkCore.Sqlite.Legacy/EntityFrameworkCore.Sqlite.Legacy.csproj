@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net10.0</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>EntityFrameworkCore.Sqlite.Legacy</RootNamespace>
+    <AssemblyName>EntityFrameworkCore.Sqlite.Legacy</AssemblyName>
+    <Version>$(PluLegacyBridgeVersion)</Version>
+    <PackageId>EntityFrameworkCore.Sqlite.Legacy</PackageId>
+    <Description>EF Core SQLite via net462 bridge: netstandard2.0 + EF 3.1 ou net10.0 + EF 10 (criptografia legada System.Data.SQLite).</Description>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <IsPackable>true</IsPackable>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Avoid compiling nested helper project intermediates (Ef31/obj). -->
+    <Compile Remove="Ef31\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="$(PluLegacyBridgeEf31Version)" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="$(PluLegacyBridgeEf10Version)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Plu.Sqlite.LegacyBridge.Ado\Sqlite.LegacyBridge.Ado.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="build\EntityFrameworkCore.Sqlite.Legacy.targets" Pack="true" PackagePath="buildTransitive\EntityFrameworkCore.Sqlite.Legacy.targets" />
+  </ItemGroup>
+
+  <Import Project="build\EntityFrameworkCore.Sqlite.Legacy.targets" />
+
+  <Target Name="PackLegacyHostIntoNupkg" BeforeTargets="GenerateNuspec" DependsOnTargets="Build;BuildLegacySqliteBridgeHost" Condition="Exists('$(MSBuildProjectDirectory)\..\Plu.Sqlite.LegacyBridge.Host\Sqlite.LegacyBridge.Host.csproj')">
+    <ItemGroup>
+      <None Include="$(MSBuildProjectDirectory)\..\Plu.Sqlite.LegacyBridge.Host\bin\$(Configuration)\net481\**\*.*"
+            Pack="true"
+            PackagePath="legacy/" />
+    </ItemGroup>
+  </Target>
+
+</Project>

@@ -1,0 +1,28 @@
+<!-- Consome só netstandard2.0 + EF 3.1 — para consumidores (ex. PDVLinear.Core) sem NU1605 com o alvo net10/EF10 do projeto principal. -->
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>EntityFrameworkCore.Sqlite.Legacy</RootNamespace>
+    <AssemblyName>EntityFrameworkCore.Sqlite.Legacy</AssemblyName>
+    <Version>$(PluLegacyBridgeVersion)</Version>
+    <IsPackable>false</IsPackable>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\SqliteLegacyDbContextOptionsExtensions.cs" Link="SqliteLegacyDbContextOptionsExtensions.cs" />
+    <Compile Include="..\LegacySqliteConnectionOptionsBuilder.cs" Link="LegacySqliteConnectionOptionsBuilder.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="$(PluLegacyBridgeEf31Version)" />
+    <ProjectReference Include="..\..\Plu.Sqlite.LegacyBridge.Ado\Sqlite.LegacyBridge.Ado.csproj" />
+  </ItemGroup>
+
+  <Import Project="..\build\EntityFrameworkCore.Sqlite.Legacy.targets" />
+
+</Project>
