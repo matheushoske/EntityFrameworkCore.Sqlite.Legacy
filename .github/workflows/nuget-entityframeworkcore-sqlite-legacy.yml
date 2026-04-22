@@ -42,13 +42,19 @@ jobs:
           dotnet-version: "10.0.x"
 
       - name: Restore
-        run: dotnet restore "src/EntityFrameworkCore.Sqlite.Legacy/EntityFrameworkCore.Sqlite.Legacy.csproj"
+        run: |
+          dotnet restore "src/EntityFrameworkCore.Sqlite.Legacy/EntityFrameworkCore.Sqlite.Legacy.csproj"
+          dotnet restore "src/EntityFrameworkCore.Sqlite.Legacy/Ef31/EntityFrameworkCore.Sqlite.Legacy.Ef31.csproj"
 
       - name: Build
-        run: dotnet build "src/EntityFrameworkCore.Sqlite.Legacy/EntityFrameworkCore.Sqlite.Legacy.csproj" -c Release --no-restore -p:Version="$env:PACKAGE_VERSION"
+        run: |
+          dotnet build "src/EntityFrameworkCore.Sqlite.Legacy/EntityFrameworkCore.Sqlite.Legacy.csproj" -c Release --no-restore -p:Version="$env:PACKAGE_VERSION"
+          dotnet build "src/EntityFrameworkCore.Sqlite.Legacy/Ef31/EntityFrameworkCore.Sqlite.Legacy.Ef31.csproj" -c Release --no-restore -p:Version="$env:PACKAGE_VERSION"
 
       - name: Pack
-        run: dotnet pack "src/EntityFrameworkCore.Sqlite.Legacy/EntityFrameworkCore.Sqlite.Legacy.csproj" -c Release --no-build -o artifacts -p:Version="$env:PACKAGE_VERSION"
+        run: |
+          dotnet pack "src/EntityFrameworkCore.Sqlite.Legacy/EntityFrameworkCore.Sqlite.Legacy.csproj" -c Release --no-build -o artifacts -p:Version="$env:PACKAGE_VERSION"
+          dotnet pack "src/EntityFrameworkCore.Sqlite.Legacy/Ef31/EntityFrameworkCore.Sqlite.Legacy.Ef31.csproj" -c Release --no-build -o artifacts -p:Version="$env:PACKAGE_VERSION"
 
       - name: Validate NuGet API key
         run: |

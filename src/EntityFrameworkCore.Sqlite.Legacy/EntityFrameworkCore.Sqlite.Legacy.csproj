@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net10.0</TargetFrameworks>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
@@ -20,16 +20,18 @@
     <Compile Remove="Ef31\**\*.cs" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="$(PluLegacyBridgeEf31Version)" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+  <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="$(PluLegacyBridgeEf10Version)" />
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Sqlite.LegacyBridge.Ado\Sqlite.LegacyBridge.Ado.csproj" />
+    <Compile Include="..\Sqlite.LegacyBridge.Protocol\**\*.cs"
+             Exclude="..\Sqlite.LegacyBridge.Protocol\bin\**\*;..\Sqlite.LegacyBridge.Protocol\obj\**\*" />
+    <Compile Include="..\Sqlite.LegacyBridge.Client\**\*.cs"
+             Exclude="..\Sqlite.LegacyBridge.Client\bin\**\*;..\Sqlite.LegacyBridge.Client\obj\**\*" />
+    <Compile Include="..\Sqlite.LegacyBridge.Ado\**\*.cs"
+             Exclude="..\Sqlite.LegacyBridge.Ado\bin\**\*;..\Sqlite.LegacyBridge.Ado\obj\**\*" />
   </ItemGroup>
 
   <ItemGroup>
