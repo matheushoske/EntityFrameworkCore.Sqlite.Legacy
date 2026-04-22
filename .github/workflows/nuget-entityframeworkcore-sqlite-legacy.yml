@@ -12,6 +12,9 @@ on:
 jobs:
   pack-and-publish:
     runs-on: windows-latest
+    environment: st
+    env:
+      NUGET_API_KEY: ${{ secrets.NUGET_API_KEY || vars.NUGET_API_KEY }}
     defaults:
       run:
         shell: pwsh
@@ -34,8 +37,8 @@ jobs:
 
       - name: Validate NuGet API key
         run: |
-          if ([string]::IsNullOrWhiteSpace("${{ secrets.NUGET_API_KEY }}")) {
-            throw "NUGET_API_KEY não configurado nos Secrets do repositório."
+          if ([string]::IsNullOrWhiteSpace("$env:NUGET_API_KEY")) {
+            throw "NUGET_API_KEY não configurado (nem em secret, nem em variable do environment/repo)."
           }
 
       - name: Publish NuGet
@@ -47,6 +50,6 @@ jobs:
 
           foreach ($pkg in $packages) {
             Write-Host "Publicando $($pkg.FullName)"
-            dotnet nuget push "$($pkg.FullName)" --api-key "${{ secrets.NUGET_API_KEY }}" --source "https://api.nuget.org/v3/index.json" --skip-duplicate
+            dotnet nuget push "$($pkg.FullName)" --api-key "$env:NUGET_API_KEY" --source "https://api.nuget.org/v3/index.json" --skip-duplicate
           }
 
