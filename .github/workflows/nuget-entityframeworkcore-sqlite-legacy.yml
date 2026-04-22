@@ -32,6 +32,21 @@ jobs:
       - name: Pack
         run: dotnet pack "src/EntityFrameworkCore.Sqlite.Legacy/EntityFrameworkCore.Sqlite.Legacy.csproj" -c Release --no-build -o artifacts
 
+      - name: Validate NuGet API key
+        run: |
+          if ([string]::IsNullOrWhiteSpace("${{ secrets.NUGET_API_KEY }}")) {
+            throw "NUGET_API_KEY não configurado nos Secrets do repositório."
+          }
+
       - name: Publish NuGet
-        run: dotnet nuget push "artifacts/*.nupkg" --api-key "${{ secrets.NUGET_API_KEY }}" --source "https://api.nuget.org/v3/index.json" --skip-duplicate
+        run: |
+          $packages = Get-ChildItem -Path "artifacts" -Filter "*.nupkg" -File
+          if ($packages.Count -eq 0) {
+            throw "Nenhum pacote .nupkg encontrado na pasta artifacts."
+          }
+
+          foreach ($pkg in $packages) {
+            Write-Host "Publicando $($pkg.FullName)"
+            dotnet nuget push "$($pkg.FullName)" --api-key "${{ secrets.NUGET_API_KEY }}" --source "https://api.nuget.org/v3/index.json" --skip-duplicate
+          }
 
