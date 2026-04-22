@@ -40,7 +40,7 @@
 
   <Target Name="PackLegacyHostIntoNupkg" BeforeTargets="GenerateNuspec" DependsOnTargets="Build;BuildLegacySqliteBridgeHost" Condition="Exists('$(MSBuildProjectDirectory)\..\Sqlite.LegacyBridge.Host\Sqlite.LegacyBridge.Host.csproj')">
     <ItemGroup>
-      <None Include="$(MSBuildProjectDirectory)\..\Sqlite.LegacyBridge.Host\bin\$(Configuration)\net481\**\*.*"
+      <None Include="$(MSBuildProjectDirectory)\..\Sqlite.LegacyBridge.Host\bin\$(Configuration)\net462\**\*.*"
             Pack="true"
             PackagePath="legacy/" />
     </ItemGroup>

@@ -1,11 +1,104 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Sqlite.LegacyBridge.Ado;
+using System.IO.Compression;
+using System.Net.Http;
 
 namespace EntityFrameworkCore.Sqlite.Legacy;
 
 public static class SqliteLegacyDbContextOptionsExtensions
 {
+    private const string DefaultHostZipUrl =
+        "https://github.com/matheushoske/Sqlite.LegacyBridge.Host/releases/latest/download/Sqlite.LegacyBridge.Host.zip";
+
+    /// <summary>
+    /// Garante que o host legado exista em <c>legacy/</c> para execução local.
+    /// Se ausente, descarrega e extrai automaticamente o zip oficial.
+    /// </summary>
+    /// <param name="baseDirectory">
+    /// Pasta base da aplicação. Se nulo, usa <see cref="AppContext.BaseDirectory"/>.
+    /// </param>
+    /// <param name="downloadUrl">
+    /// URL opcional do zip do host. Se nula, usa a release pública oficial.
+    /// </param>
+    public static void SetupBridgeHost(string? baseDirectory = null, string? downloadUrl = null)
+    {
+        var appBaseDirectory = string.IsNullOrWhiteSpace(baseDirectory)
+            ? AppContext.BaseDirectory
+            : baseDirectory!;
+        var legacyDirectory = Path.Combine(Path.GetFullPath(appBaseDirectory), "legacy");
+        if (HostExists(legacyDirectory))
+            return;
+
+        Directory.CreateDirectory(legacyDirectory);
+        var url = string.IsNullOrWhiteSpace(downloadUrl) ? DefaultHostZipUrl : downloadUrl!;
+        var tempZip = Path.Combine(Path.GetTempPath(), "sqlite-legacy-host-" + Guid.NewGuid().ToString("N") + ".zip");
+        try
+        {
+            DownloadFile(url, tempZip);
+            ExtractZip(tempZip, legacyDirectory);
+            if (!HostExists(legacyDirectory))
+                throw new InvalidOperationException(
+                    "Download concluído, mas Sqlite.LegacyBridge.Host.exe não foi encontrado em legacy/.");
+        }
+        finally
+        {
+            try
+            {
+                if (File.Exists(tempZip))
+                    File.Delete(tempZip);
+            }
+            catch
+            {
+                // cleanup best-effort
+            }
+        }
+    }
+
+    private static bool HostExists(string legacyDirectory)
+    {
+        var hostExePath = Path.Combine(legacyDirectory, "Sqlite.LegacyBridge.Host.exe");
+        return File.Exists(hostExePath);
+    }
+
+    private static void DownloadFile(string url, string outputPath)
+    {
+        using var httpClient = new HttpClient
+        {
+            Timeout = TimeSpan.FromMinutes(3)
+        };
+        var bytes = httpClient.GetByteArrayAsync(url).ConfigureAwait(false).GetAwaiter().GetResult();
+        File.WriteAllBytes(outputPath, bytes);
+    }
+
+    private static void ExtractZip(string zipPath, string destinationDirectory)
+    {
+        using var zipStream = File.OpenRead(zipPath);
+        using var archive = new ZipArchive(zipStream, ZipArchiveMode.Read, leaveOpen: false);
+        var destinationFullPath = Path.GetFullPath(destinationDirectory) + Path.DirectorySeparatorChar;
+
+        foreach (var entry in archive.Entries)
+        {
+            var targetPath = Path.GetFullPath(Path.Combine(destinationDirectory, entry.FullName));
+            if (!targetPath.StartsWith(destinationFullPath, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Entrada inválida no zip do host: " + entry.FullName);
+
+            if (string.IsNullOrEmpty(entry.Name))
+            {
+                Directory.CreateDirectory(targetPath);
+                continue;
+            }
+
+            var parentDirectory = Path.GetDirectoryName(targetPath);
+            if (!string.IsNullOrEmpty(parentDirectory))
+                Directory.CreateDirectory(parentDirectory);
+
+            using var entryStream = entry.Open();
+            using var outputStream = File.Create(targetPath);
+            entryStream.CopyTo(outputStream);
+        }
+    }
+
     /// <summary>
     /// Usa o provider SQLite do EF Core com uma <see cref="DbConnection"/> que delega ao processo bridge net462.
     /// O compilador de consultas LINQ, rastreamento, <c>SaveChanges</c>/<c>SaveChangesAsync</c>, transações e
