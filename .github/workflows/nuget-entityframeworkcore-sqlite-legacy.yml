@@ -2,6 +2,9 @@ name: NuGet Publish
 
 on:
   push:
+    branches:
+      - master
+      - main
     tags:
       - "v*"
   workflow_dispatch:
@@ -30,6 +33,5 @@ jobs:
         run: dotnet pack "src/EntityFrameworkCore.Sqlite.Legacy/EntityFrameworkCore.Sqlite.Legacy.csproj" -c Release --no-build -o artifacts
 
       - name: Publish NuGet
-        if: startsWith(github.ref, 'refs/tags/')
         run: dotnet nuget push "artifacts/*.nupkg" --api-key "${{ secrets.NUGET_API_KEY }}" --source "https://api.nuget.org/v3/index.json" --skip-duplicate
 
