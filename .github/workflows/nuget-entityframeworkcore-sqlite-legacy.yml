@@ -53,8 +53,28 @@ jobs:
 
       - name: Pack
         run: |
-          dotnet pack "src/EntityFrameworkCore.Sqlite.Legacy/EntityFrameworkCore.Sqlite.Legacy.csproj" -c Release --no-build -o artifacts -p:Version="$env:PACKAGE_VERSION"
-          dotnet pack "src/EntityFrameworkCore.Sqlite.Legacy/Ef31/EntityFrameworkCore.Sqlite.Legacy.Ef31.csproj" -c Release --no-build -o artifacts -p:Version="$env:PACKAGE_VERSION"
+          dotnet pack "src/EntityFrameworkCore.Sqlite.Legacy/EntityFrameworkCore.Sqlite.Legacy.csproj" -c Release -o artifacts -p:Version="$env:PACKAGE_VERSION"
+          dotnet pack "src/EntityFrameworkCore.Sqlite.Legacy/Ef31/EntityFrameworkCore.Sqlite.Legacy.Ef31.csproj" -c Release -o artifacts -p:Version="$env:PACKAGE_VERSION"
+
+      - name: Validate package target frameworks
+        run: |
+          $mainPkg = Get-ChildItem -Path "artifacts" -Filter "EntityFrameworkCore.Sqlite.Legacy.*.nupkg" -File | Where-Object { $_.Name -notmatch "\.symbols\.nupkg$" } | Select-Object -First 1
+          if (-not $mainPkg) {
+            throw "Pacote principal EntityFrameworkCore.Sqlite.Legacy não foi gerado."
+          }
+
+          $inspectDir = Join-Path $env:RUNNER_TEMP "pkg-inspect-main"
+          if (Test-Path $inspectDir) { Remove-Item $inspectDir -Recurse -Force }
+          New-Item -ItemType Directory -Path $inspectDir | Out-Null
+          $zipPath = Join-Path $inspectDir "pkg.zip"
+          Copy-Item $mainPkg.FullName $zipPath -Force
+          Expand-Archive -Path $zipPath -DestinationPath $inspectDir -Force
+
+          $netStdDll = Join-Path $inspectDir "lib/netstandard2.0/EntityFrameworkCore.Sqlite.Legacy.dll"
+          $net10Dll = Join-Path $inspectDir "lib/net10.0/EntityFrameworkCore.Sqlite.Legacy.dll"
+
+          if (-not (Test-Path $netStdDll)) { throw "Pacote inválido: faltou lib/netstandard2.0/EntityFrameworkCore.Sqlite.Legacy.dll" }
+          if (-not (Test-Path $net10Dll)) { throw "Pacote inválido: faltou lib/net10.0/EntityFrameworkCore.Sqlite.Legacy.dll" }
 
       - name: Validate NuGet API key
         run: |

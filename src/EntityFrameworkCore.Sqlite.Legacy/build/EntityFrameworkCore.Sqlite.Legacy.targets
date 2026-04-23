@@ -2,13 +2,13 @@
 
   <PropertyGroup>
     <_PackagedLegacyDir>$(MSBuildThisFileDirectory)..\legacy\</_PackagedLegacyDir>
-    <_SourceHostDir>$(MSBuildThisFileDirectory)..\..\Sqlite.LegacyBridge.Host\bin\$(Configuration)\net481\</_SourceHostDir>
+    <_SourceHostDir>$(MSBuildThisFileDirectory)..\..\Sqlite.LegacyBridge.Host\bin\$(Configuration)\net462\</_SourceHostDir>
     <_HostProject>$(MSBuildThisFileDirectory)..\..\Sqlite.LegacyBridge.Host\Sqlite.LegacyBridge.Host.csproj</_HostProject>
   </PropertyGroup>
 
   <Target Name="BuildLegacySqliteBridgeHost" Condition="Exists('$(_HostProject)')">
     <MSBuild Projects="$(_HostProject)"
-             Properties="Configuration=$(Configuration);TargetFramework=net481"
+             Properties="Configuration=$(Configuration);TargetFramework=net462"
              Targets="Build" />
   </Target>
 
