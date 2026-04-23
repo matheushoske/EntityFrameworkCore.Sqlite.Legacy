@@ -58,23 +58,35 @@ jobs:
 
       - name: Validate package target frameworks
         run: |
-          $mainPkg = Get-ChildItem -Path "artifacts" -Filter "EntityFrameworkCore.Sqlite.Legacy.*.nupkg" -File | Where-Object { $_.Name -notmatch "\.symbols\.nupkg$" } | Select-Object -First 1
+          $mainPkg = Get-ChildItem -Path "artifacts" -Filter "EntityFrameworkCore.Sqlite.Legacy.$env:PACKAGE_VERSION.nupkg" -File | Select-Object -First 1
           if (-not $mainPkg) {
             throw "Pacote principal EntityFrameworkCore.Sqlite.Legacy não foi gerado."
           }
 
-          $inspectDir = Join-Path $env:RUNNER_TEMP "pkg-inspect-main"
-          if (Test-Path $inspectDir) { Remove-Item $inspectDir -Recurse -Force }
-          New-Item -ItemType Directory -Path $inspectDir | Out-Null
-          $zipPath = Join-Path $inspectDir "pkg.zip"
-          Copy-Item $mainPkg.FullName $zipPath -Force
-          Expand-Archive -Path $zipPath -DestinationPath $inspectDir -Force
+          $ef31Pkg = Get-ChildItem -Path "artifacts" -Filter "EntityFrameworkCore.Sqlite.Legacy.Ef31.$env:PACKAGE_VERSION.nupkg" -File | Select-Object -First 1
+          if (-not $ef31Pkg) {
+            throw "Pacote EntityFrameworkCore.Sqlite.Legacy.Ef31 não foi gerado."
+          }
 
-          $netStdDll = Join-Path $inspectDir "lib/netstandard2.0/EntityFrameworkCore.Sqlite.Legacy.dll"
-          $net10Dll = Join-Path $inspectDir "lib/net10.0/EntityFrameworkCore.Sqlite.Legacy.dll"
+          $mainInspectDir = Join-Path $env:RUNNER_TEMP "pkg-inspect-main"
+          if (Test-Path $mainInspectDir) { Remove-Item $mainInspectDir -Recurse -Force }
+          New-Item -ItemType Directory -Path $mainInspectDir | Out-Null
+          $mainZipPath = Join-Path $mainInspectDir "pkg.zip"
+          Copy-Item $mainPkg.FullName $mainZipPath -Force
+          Expand-Archive -Path $mainZipPath -DestinationPath $mainInspectDir -Force
 
-          if (-not (Test-Path $netStdDll)) { throw "Pacote inválido: faltou lib/netstandard2.0/EntityFrameworkCore.Sqlite.Legacy.dll" }
-          if (-not (Test-Path $net10Dll)) { throw "Pacote inválido: faltou lib/net10.0/EntityFrameworkCore.Sqlite.Legacy.dll" }
+          $mainNet10Dll = Join-Path $mainInspectDir "lib/net10.0/EntityFrameworkCore.Sqlite.Legacy.dll"
+          if (-not (Test-Path $mainNet10Dll)) { throw "Pacote inválido: faltou lib/net10.0/EntityFrameworkCore.Sqlite.Legacy.dll" }
+
+          $ef31InspectDir = Join-Path $env:RUNNER_TEMP "pkg-inspect-ef31"
+          if (Test-Path $ef31InspectDir) { Remove-Item $ef31InspectDir -Recurse -Force }
+          New-Item -ItemType Directory -Path $ef31InspectDir | Out-Null
+          $ef31ZipPath = Join-Path $ef31InspectDir "pkg.zip"
+          Copy-Item $ef31Pkg.FullName $ef31ZipPath -Force
+          Expand-Archive -Path $ef31ZipPath -DestinationPath $ef31InspectDir -Force
+
+          $ef31NetStdDll = Join-Path $ef31InspectDir "lib/netstandard2.0/EntityFrameworkCore.Sqlite.Legacy.Ef31.dll"
+          if (-not (Test-Path $ef31NetStdDll)) { throw "Pacote inválido: faltou lib/netstandard2.0/EntityFrameworkCore.Sqlite.Legacy.Ef31.dll" }
 
       - name: Validate NuGet API key
         run: |
