@@ -11,6 +11,7 @@
     <Version>$(PluLegacyBridgeVersion)</Version>
     <PackageId>EntityFrameworkCore.Sqlite.Legacy.Ef31</PackageId>
     <Description>EF Core 3.1 variant of EntityFrameworkCore.Sqlite.Legacy for netstandard2.0 consumers.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <IsPackable>true</IsPackable>
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
@@ -33,6 +34,7 @@
 
   <ItemGroup>
     <None Include="..\build\EntityFrameworkCore.Sqlite.Legacy.targets" Pack="true" PackagePath="buildTransitive\EntityFrameworkCore.Sqlite.Legacy.Ef31.targets" />
+    <None Include="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
   <Import Project="..\build\EntityFrameworkCore.Sqlite.Legacy.targets" />

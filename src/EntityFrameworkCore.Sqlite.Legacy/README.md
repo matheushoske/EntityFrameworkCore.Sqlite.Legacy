@@ -1,58 +1,89 @@
 # EntityFrameworkCore.Sqlite.Legacy
 
-`EntityFrameworkCore.Sqlite.Legacy` enables Entity Framework Core to access legacy encrypted SQLite databases by routing ADO calls to a .NET Framework host over named pipes.
+NuGet package for EF Core 10 projects that need legacy encrypted SQLite compatibility through a bridge host.
 
-## Architecture
+## Install
 
-`EF Core DbContext` -> `Sqlite.LegacyBridge.Ado` -> `Sqlite.LegacyBridge.Client` -> `Named Pipe` -> `Sqlite.LegacyBridge.Host (.NET Framework 4.8.1)` -> `System.Data.SQLite`.
+```bash
+dotnet add package EntityFrameworkCore.Sqlite.Legacy
+```
 
-## Supported encryption
+## Designed for legacy encrypted datasets
 
-- Legacy SQLite files opened via `System.Data.SQLite` in host mode.
-- Password-based access (for example from `PLU_SQLITE_PASSWORD` / `CFE_SQLITE_PASSWORD`).
-- RSA/legacy-compatible encryption scenarios supported by the native provider configured in host.
+This package is commonly used when the database was created with provider/encryption stacks historically found in large-scale legacy enterprise systems, including scenarios with RC4 or RSA-oriented legacy encryption workflows.
 
-## Prerequisites and limitations
+It keeps EF Core at application level while delegating low-level DB opening/execution to a host that runs with `System.Data.SQLite`.
 
-- Host binary must be available in `legacy/` output folder (copied by package targets).
-- Host and consumer architecture must be compatible (`x86` in this stack).
-- The package supports:
-  - `netstandard2.0` + EF Core 3.1.
-  - `net10.0` + EF Core 10.
-- Runtime depends on named pipes and local host process startup.
+## How it works
 
-## Install and use
+`DbContext (EF Core 10)` -> `UseSqliteLegacy(...)` -> `Named Pipe Bridge` -> `Sqlite.LegacyBridge.Host (net462)` -> `System.Data.SQLite` -> `legacy encrypted db`
+
+## Setup in Startup
 
 ```csharp
 using EntityFrameworkCore.Sqlite.Legacy;
-using Microsoft.EntityFrameworkCore;
 
-var options = new DbContextOptionsBuilder<MyDbContext>()
-    .UseSqliteLegacy(@"C:\data\plu.db3", "my-password")
-    .Options;
+SqliteLegacyDbContextOptionsExtensions.SetupBridgeHost();
 ```
 
-You can also configure with options builder callback:
+Then configure your context:
+
+```csharp
+services.AddDbContext<MyDbContext>(options =>
+{
+    options.UseSqliteLegacy(o =>
+    {
+        o.DatabasePath(@"C:\data\plu.db3");
+        o.Password("your-password");
+    });
+});
+```
+
+## Automatic host provisioning
+
+`SetupBridgeHost()` checks runtime `legacy/` content and downloads host binaries if missing:
+
+- `https://github.com/matheushoske/Sqlite.LegacyBridge.Host/releases/latest/download/Sqlite.LegacyBridge.Host.zip`
+
+## Advanced configuration example
 
 ```csharp
 optionsBuilder.UseSqliteLegacy(o =>
 {
     o.DatabasePath(@"C:\data\cfe.db3");
-    o.Password("my-password");
-    o.HostExecutablePath(@"C:\app\legacy\Sqlite.LegacyBridge.Host.exe");
+    o.Password("your-password");
+    o.HostExecutablePath(@"C:\myapp\legacy\Sqlite.LegacyBridge.Host.exe");
+}, sqlite =>
+{
+    sqlite.MigrationsAssembly("My.Migrations");
 });
 ```
 
-## Migrations
+## Compatibility
 
-- Recommended for legacy databases: create an empty baseline migration, then add new migrations only for new tables.
-- Keep migration assembly configured explicitly when needed:
-  - `UseSqliteLegacy(..., configureSqlite: sql => sql.MigrationsAssembly("Your.Assembly"))`.
+- Target: `net10.0`
+- EF family: `10.x`
+
+Need EF Core 3.1? Use:
+
+- `EntityFrameworkCore.Sqlite.Legacy.Ef31`
+
+## Notes for production legacy environments
+
+- Validate encryption/password compatibility with your original DB creator stack.
+- Keep host and native SQLite files together.
+- Prefer controlled rollout with fixed package/release versions.
+- For migration edge-cases in old providers, use baseline + manual SQL strategy.
 
 ## Troubleshooting
 
-- **Host not found**: ensure `legacy/Sqlite.LegacyBridge.Host.exe` is copied to output/publish.
-- **Architecture mismatch**: use `x86` where required by native SQLite stack.
-- **`file is not a database`**: validate password/encryption and file path.
-- **EF migrate provider edge-cases**: for legacy providers, consider baseline + manual SQL migration for critical tables.
+- **`file is not a database`**: wrong password, wrong file, incompatible encryption/provider pairing.
+- **Host not found**: call `SetupBridgeHost()` before DbContext wiring.
+- **Interop/runtime errors**: check architecture requirements (`x86` in many legacy setups).
+- **Startup blocked**: verify antivirus rules for host process creation.
+
+## Links
+
+- Source repository: [EntityFrameworkCore.Sqlite.Legacy](https://github.com/matheushoske/EntityFrameworkCore.Sqlite.Legacy)
+- Host binaries: [Sqlite.LegacyBridge.Host](https://github.com/matheushoske/Sqlite.LegacyBridge.Host)
 

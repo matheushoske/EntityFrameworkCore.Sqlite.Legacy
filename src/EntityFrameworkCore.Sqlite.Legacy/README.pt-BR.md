@@ -1,27 +1,24 @@
 # EntityFrameworkCore.Sqlite.Legacy
 
-O `EntityFrameworkCore.Sqlite.Legacy` permite usar Entity Framework Core em bancos SQLite legados criptografados, roteando as chamadas ADO para um host .NET Framework via named pipes.
+Pacote NuGet para projetos EF Core 10 que precisam acessar bancos SQLite legados criptografados por meio de um host de compatibilidade.
 
-## Arquitetura
+## Instalacao
 
-`DbContext EF Core` -> `Sqlite.LegacyBridge.Ado` -> `Sqlite.LegacyBridge.Client` -> `Named Pipe` -> `Sqlite.LegacyBridge.Host (.NET Framework 4.8.1)` -> `System.Data.SQLite`.
+```bash
+dotnet add package EntityFrameworkCore.Sqlite.Legacy
+```
 
-## Criptografia suportada
+## Foco em ambientes legados criptografados
 
-- Bases SQLite legadas abertas pelo `System.Data.SQLite` no host.
-- Acesso com senha (por exemplo `PLU_SQLITE_PASSWORD` / `CFE_SQLITE_PASSWORD`).
-- Cenarios de criptografia RSA/legado suportados pelo provider nativo configurado no host.
+Este pacote e voltado para cenarios comuns em sistemas enterprise legados/de grande escala, incluindo perfis historicos com criptografia RC4/RSA e comportamentos especificos do `System.Data.SQLite`.
 
-## Pre-requisitos e limitacoes
+Ele permite:
 
-- O binario do host deve estar em `legacy/` na saida (copiado pelos targets do pacote).
-- Arquitetura do host e do consumidor deve ser compativel (`x86` nesta stack).
-- O pacote suporta:
-  - `netstandard2.0` + EF Core 3.1.
-  - `net10.0` + EF Core 10.
-- Em runtime ha dependencia de named pipes e inicializacao do processo host local.
+- manter dominio, repositorios e consultas no EF Core;
+- delegar abertura/execucao fisica para o host legado;
+- preservar compatibilidade sem exigir migracao imediata de dados.
 
-## Instalacao e uso
+## Uso basico
 
 ```csharp
 using EntityFrameworkCore.Sqlite.Legacy;
@@ -32,7 +29,11 @@ var options = new DbContextOptionsBuilder<MyDbContext>()
     .Options;
 ```
 
-Configuracao com builder:
+## Como funciona
+
+`DbContext (EF Core 10)` -> `UseSqliteLegacy(...)` -> `bridge ADO` -> `Named Pipes` -> `Sqlite.LegacyBridge.Host (net462)` -> `System.Data.SQLite` -> `banco legado`
+
+## Configuracao avancada
 
 ```csharp
 optionsBuilder.UseSqliteLegacy(o =>
@@ -40,19 +41,45 @@ optionsBuilder.UseSqliteLegacy(o =>
     o.DatabasePath(@"C:\data\cfe.db3");
     o.Password("minha-senha");
     o.HostExecutablePath(@"C:\app\legacy\Sqlite.LegacyBridge.Host.exe");
+}, sql =>
+{
+    sql.MigrationsAssembly("Meu.Assembly.Migrations");
 });
 ```
 
-## Migrations
+## Setup automatico do host
 
-- Recomendado para base legada: baseline vazia e novas migrations apenas para tabelas novas.
-- Quando necessario, configurar assembly de migration explicitamente:
-  - `UseSqliteLegacy(..., configureSqlite: sql => sql.MigrationsAssembly("Seu.Assembly"))`.
+No startup da aplicacao:
 
-## Troubleshooting
+```csharp
+SqliteLegacyDbContextOptionsExtensions.SetupBridgeHost();
+```
 
-- **Host nao encontrado**: confirme `legacy/Sqlite.LegacyBridge.Host.exe` na pasta de output/publish.
-- **Incompatibilidade de arquitetura**: use `x86` quando exigido pela stack nativa SQLite.
-- **`file is not a database`**: valide senha/criptografia e caminho do arquivo.
-- **Erros de migrate em provider legado**: considere baseline + migration SQL manual para tabelas criticas.
+Se o host nao existir, o pacote baixa automaticamente:
+
+- `https://github.com/matheushoske/Sqlite.LegacyBridge.Host/releases/latest/download/Sqlite.LegacyBridge.Host.zip`
+
+e extrai para `legacy/` no diretorio da aplicacao.
+
+## Compatibilidade
+
+- Target: `net10.0`
+- Linha EF Core: `10.x`
+
+Para EF Core 3.1 (`netstandard2.0`), use o pacote:
+
+- `EntityFrameworkCore.Sqlite.Legacy.Ef31`
+
+## Problemas comuns
+
+- **Host nao encontrado**: chame `SetupBridgeHost()` antes da configuracao de DbContext.
+- **`file is not a database`**: valide senha, modo de criptografia (RC4/RSA), caminho e compatibilidade do provider nativo.
+- **Erro de arquitetura**: alinhe com requisitos nativos do SQLite legado (em muitos cenarios, `x86`).
+- **Incompatibilidade em migrations**: use baseline + SQL manual para operacoes nao suportadas.
+- **Bloqueio de inicializacao**: valide antivirus/EDR para criacao de processo e uso de pipe local.
+
+## Repositorios relacionados
+
+- Codigo-fonte e docs: [EntityFrameworkCore.Sqlite.Legacy](https://github.com/matheushoske/EntityFrameworkCore.Sqlite.Legacy)
+- Host runtime: [Sqlite.LegacyBridge.Host](https://github.com/matheushoske/Sqlite.LegacyBridge.Host)
 

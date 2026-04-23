@@ -10,6 +10,7 @@
     <Version>$(PluLegacyBridgeVersion)</Version>
     <PackageId>EntityFrameworkCore.Sqlite.Legacy</PackageId>
     <Description>EF Core SQLite via net462 bridge: netstandard2.0 + EF 3.1 ou net10.0 + EF 10 (criptografia legada System.Data.SQLite).</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <IsPackable>true</IsPackable>
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
@@ -36,6 +37,7 @@
 
   <ItemGroup>
     <None Include="build\EntityFrameworkCore.Sqlite.Legacy.targets" Pack="true" PackagePath="buildTransitive\EntityFrameworkCore.Sqlite.Legacy.targets" />
+    <None Include="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
   <Import Project="build\EntityFrameworkCore.Sqlite.Legacy.targets" />
