@@ -10,6 +10,7 @@ public static class SqliteLegacyDbContextOptionsExtensions
 {
     private const string DefaultHostZipUrl =
         "https://github.com/matheushoske/Sqlite.LegacyBridge.Host/releases/latest/download/Sqlite.LegacyBridge.Host.zip";
+    private const string DefaultHostPathEnvironmentVariable = "SQLITE_LEGACY_BRIDGE_HOST_EXE_PATH";
 
     /// <summary>
     /// Garante que o host legado exista em <c>legacy/</c> para execução local.
@@ -27,6 +28,12 @@ public static class SqliteLegacyDbContextOptionsExtensions
             ? AppContext.BaseDirectory
             : baseDirectory!;
         var legacyDirectory = Path.Combine(Path.GetFullPath(appBaseDirectory), "legacy");
+        var hostExePath = Path.Combine(legacyDirectory, "Sqlite.LegacyBridge.Host.exe");
+
+        // Keep a process-level default host path aligned with SetupBridgeHost(baseDir).
+        // Explicit HostExecutablePath in UseSqliteLegacy still has precedence.
+        Environment.SetEnvironmentVariable(DefaultHostPathEnvironmentVariable, hostExePath);
+
         if (HostExists(legacyDirectory))
             return;
 

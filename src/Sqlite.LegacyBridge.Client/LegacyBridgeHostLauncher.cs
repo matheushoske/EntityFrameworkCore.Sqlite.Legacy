@@ -5,6 +5,8 @@ namespace Sqlite.LegacyBridge.Client;
 
 public sealed class LegacyBridgeHostLauncher
 {
+    private const string DefaultHostPathEnvironmentVariable = "SQLITE_LEGACY_BRIDGE_HOST_EXE_PATH";
+
     public static Process Start(string hostExecutablePath, string pipeName, string databasePath, string password)
     {
         if (!File.Exists(hostExecutablePath))
@@ -21,7 +23,9 @@ public sealed class LegacyBridgeHostLauncher
             UseShellExecute = false,
             RedirectStandardError = false,
             RedirectStandardOutput = false,
-            CreateNoWindow = false,
+            // Run host in ghost mode (hidden console window).
+            CreateNoWindow = true,
+            WindowStyle = ProcessWindowStyle.Hidden,
         };
 
 #if NETSTANDARD2_0
@@ -70,6 +74,10 @@ public sealed class LegacyBridgeHostLauncher
     {
         if (!string.IsNullOrEmpty(overridePath) && File.Exists(overridePath))
             return Path.GetFullPath(overridePath);
+
+        var defaultHostPath = Environment.GetEnvironmentVariable(DefaultHostPathEnvironmentVariable);
+        if (!string.IsNullOrWhiteSpace(defaultHostPath) && File.Exists(defaultHostPath))
+            return Path.GetFullPath(defaultHostPath);
 
         var baseDir = AppContext.BaseDirectory;
         var candidates = new[]
