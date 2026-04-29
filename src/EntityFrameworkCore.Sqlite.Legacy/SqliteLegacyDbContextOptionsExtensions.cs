@@ -62,6 +62,12 @@ public static class SqliteLegacyDbContextOptionsExtensions
         }
     }
 
+    /// <summary>
+    /// Fecha todos os processos/sessões do pool do bridge no processo atual.
+    /// Use quando trocar arquivos de banco, encerrar a aplicação ou quiser liberar handles.
+    /// </summary>
+    public static void ClearBridgeHostPools() => global::Sqlite.LegacyBridge.Ado.LegacyBridgeSessionPool.ClearAll();
+
     private static bool HostExists(string legacyDirectory)
     {
         var hostExePath = Path.Combine(legacyDirectory, "Sqlite.LegacyBridge.Host.exe");

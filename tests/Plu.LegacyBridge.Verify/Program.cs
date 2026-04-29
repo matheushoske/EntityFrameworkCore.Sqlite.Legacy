@@ -20,6 +20,9 @@ internal static class Program
     {
         try
         {
+            Console.WriteLine("0) Unit: SetupBridgeHost baseDir default path…");
+            VerifySetupBridgeHostBaseDirectoryDefault();
+
             var db = IntegrationTestEnvironment.GetDatabasePath();
             var pwd = IntegrationTestEnvironment.GetPassword();
             var host = IntegrationTestEnvironment.GetHostExecutablePath();
@@ -114,6 +117,17 @@ internal static class Program
             if (ver != new Version(10, 0, 0, 0))
                 return Fail("Versão EF.Sqlite inesperada: " + ver);
 
+            Console.WriteLine("8) Pool smoke benchmark…");
+            var pooledOptions = new DbContextOptionsBuilder<VersaoVerifyContext>()
+                .UseSqliteLegacy(db, pwd, host)
+                .Options;
+            var firstOpen = await MeasureEfFirstRowAsync(pooledOptions);
+            var secondOpen = await MeasureEfFirstRowAsync(pooledOptions);
+            Console.WriteLine($"POOL_SMOKE_FIRST_OPEN_MS={firstOpen}");
+            Console.WriteLine($"POOL_SMOKE_SECOND_OPEN_MS={secondOpen}");
+            if (secondOpen > firstOpen)
+                Console.WriteLine("POOL_SMOKE_NOTE=second open was not faster in this run; keeping full E2E result as source of truth.");
+
             Console.WriteLine("OK — todas as verificações passaram.");
             return 0;
         }
@@ -121,6 +135,53 @@ internal static class Program
         {
             return Fail(ex.ToString());
         }
+        finally
+        {
+            SqliteLegacyDbContextOptionsExtensions.ClearBridgeHostPools();
+        }
+    }
+
+    private static void VerifySetupBridgeHostBaseDirectoryDefault()
+    {
+        const string envName = "SQLITE_LEGACY_BRIDGE_HOST_EXE_PATH";
+        var previousValue = Environment.GetEnvironmentVariable(envName);
+        var tempBase = Path.Combine(Path.GetTempPath(), "plu_bridge_unit_" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            var legacyDir = Path.Combine(tempBase, "legacy");
+            Directory.CreateDirectory(legacyDir);
+            var expectedHost = Path.Combine(legacyDir, "Sqlite.LegacyBridge.Host.exe");
+            File.WriteAllBytes(expectedHost, Array.Empty<byte>());
+
+            SqliteLegacyDbContextOptionsExtensions.SetupBridgeHost(tempBase);
+            var resolved = LegacyBridgeHostLauncher.ResolveHostPath();
+            if (!string.Equals(Path.GetFullPath(expectedHost), resolved, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("SetupBridgeHost(baseDir) não configurou o host default no mesmo baseDir.");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(envName, previousValue);
+            try
+            {
+                if (Directory.Exists(tempBase))
+                    Directory.Delete(tempBase, recursive: true);
+            }
+            catch
+            {
+                // ignore
+            }
+        }
+    }
+
+    private static async Task<long> MeasureEfFirstRowAsync(DbContextOptions<VersaoVerifyContext> options)
+    {
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        await using var ctx = new VersaoVerifyContext(options);
+        var row = await ctx.Versao.AsNoTracking().FirstOrDefaultAsync();
+        if (row is null)
+            throw new InvalidOperationException("Pool smoke: versao não retornou linhas.");
+        sw.Stop();
+        return sw.ElapsedMilliseconds;
     }
 }
 

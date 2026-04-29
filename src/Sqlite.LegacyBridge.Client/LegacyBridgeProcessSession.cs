@@ -9,6 +9,14 @@ public sealed class LegacyBridgeProcessSession : IDisposable
 {
     private readonly Process _host;
     public LegacyBridgeSession Session { get; }
+    public bool IsAlive
+    {
+        get
+        {
+            try { return !_host.HasExited; }
+            catch { return false; }
+        }
+    }
 
     private LegacyBridgeProcessSession(Process host, LegacyBridgeSession session)
     {
@@ -24,19 +32,18 @@ public sealed class LegacyBridgeProcessSession : IDisposable
         string? pipeName = null)
     {
         pipeName ??= "PluSqliteLegacy_" + Guid.NewGuid().ToString("N");
-        Console.WriteLine($"[LegacyBridge] StartBlocking pipe={pipeName} db={databasePath} (antes Process.Start)");
+        Debug.WriteLine($"[LegacyBridge] StartBlocking pipe={pipeName} db={databasePath} (antes Process.Start)");
         var host = LegacyBridgeHostLauncher.Start(hostExecutablePath, pipeName, databasePath, password);
-        Console.WriteLine($"[LegacyBridge] host pid={host.Id} (após Process.Start)");
+        Debug.WriteLine($"[LegacyBridge] host pid={host.Id} (após Process.Start)");
         try
         {
-            Thread.Sleep(1_000);
             try { host.Refresh(); } catch { /* ignore */ }
             if (host.HasExited)
                 throw new InvalidOperationException(
                     $"Sqlite.LegacyBridge.Host terminou antes da ligação ao pipe (exit {host.ExitCode}). Verifique legacy\\ e o caminho da base.");
-            Console.WriteLine("[LegacyBridge] conectando ao pipe…");
+            Debug.WriteLine("[LegacyBridge] conectando ao pipe…");
             var session = LegacyBridgeSession.ConnectBlocking(pipeName);
-            Console.WriteLine("[LegacyBridge] pipe conectado; ping…");
+            Debug.WriteLine("[LegacyBridge] pipe conectado; ping…");
             var ping = Task.Run(() => session.PingAsync().ConfigureAwait(false).GetAwaiter().GetResult())
                 .GetAwaiter()
                 .GetResult();
@@ -59,19 +66,18 @@ public sealed class LegacyBridgeProcessSession : IDisposable
         CancellationToken cancellationToken = default)
     {
         pipeName ??= "PluSqliteLegacy_" + Guid.NewGuid().ToString("N");
-        Console.WriteLine($"[LegacyBridge] StartAsync pipe={pipeName} db={databasePath} (antes Process.Start)");
+        Debug.WriteLine($"[LegacyBridge] StartAsync pipe={pipeName} db={databasePath} (antes Process.Start)");
         var host = LegacyBridgeHostLauncher.Start(hostExecutablePath, pipeName, databasePath, password);
-        Console.WriteLine($"[LegacyBridge] host pid={host.Id} (após Process.Start)");
+        Debug.WriteLine($"[LegacyBridge] host pid={host.Id} (após Process.Start)");
         try
         {
-            await Task.Delay(1_000, cancellationToken).ConfigureAwait(false);
             try { host.Refresh(); } catch { /* ignore */ }
             if (host.HasExited)
                 throw new InvalidOperationException(
                     $"Sqlite.LegacyBridge.Host terminou antes da ligação ao pipe (exit {host.ExitCode}). Verifique legacy\\ e o caminho da base.");
-            Console.WriteLine("[LegacyBridge] conectando ao pipe…");
+            Debug.WriteLine("[LegacyBridge] conectando ao pipe…");
             var session = await LegacyBridgeSession.ConnectAsync(pipeName, cancellationToken).ConfigureAwait(false);
-            Console.WriteLine("[LegacyBridge] pipe conectado; ping…");
+            Debug.WriteLine("[LegacyBridge] pipe conectado; ping…");
             var ping = await session.PingAsync(cancellationToken).ConfigureAwait(false);
             if (!ping.Ok)
                 throw new InvalidOperationException(ping.Error ?? "ping falhou");

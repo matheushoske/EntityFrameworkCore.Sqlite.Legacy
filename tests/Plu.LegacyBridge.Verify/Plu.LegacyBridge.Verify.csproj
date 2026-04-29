@@ -10,7 +10,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Sqlite.LegacyBridge.Ado\Sqlite.LegacyBridge.Ado.csproj" />
     <ProjectReference Include="..\..\src\EntityFrameworkCore.Sqlite.Legacy\EntityFrameworkCore.Sqlite.Legacy.csproj" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.0" />
   </ItemGroup>

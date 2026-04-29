@@ -11,6 +11,8 @@ public sealed class LegacyBridgeDbConnection : DbConnection
     private LegacyBridgeProcessSession? _process;
     private ConnectionState _state = ConnectionState.Closed;
     private LegacyBridgeDbTransaction? _transaction;
+    private string? _resolvedHostPath;
+    private string? _resolvedDatabasePath;
 
     public LegacyBridgeDbConnection(LegacySqliteConnectionOptions options)
     {
@@ -43,10 +45,41 @@ public sealed class LegacyBridgeDbConnection : DbConnection
         if (_state == ConnectionState.Closed)
             return;
 
-        _transaction?.Dispose();
+        var discardSession = false;
+        try
+        {
+            _transaction?.Dispose();
+        }
+        catch
+        {
+            discardSession = true;
+        }
+
         _transaction = null;
-        _process?.Dispose();
+        var process = _process;
         _process = null;
+        if (process != null)
+        {
+            if (_options.Pooling &&
+                !discardSession &&
+                _resolvedHostPath != null &&
+                _resolvedDatabasePath != null)
+            {
+                LegacyBridgeSessionPool.Return(
+                    _resolvedHostPath,
+                    _resolvedDatabasePath,
+                    _options.Password,
+                    process,
+                    _options.MaxPoolSize);
+            }
+            else
+            {
+                process.Dispose();
+            }
+        }
+
+        _resolvedHostPath = null;
+        _resolvedDatabasePath = null;
         _state = ConnectionState.Closed;
     }
 
@@ -59,16 +92,23 @@ public sealed class LegacyBridgeDbConnection : DbConnection
             ? LegacyBridgeHostLauncher.ResolveHostPath()
             : _options.HostExecutablePath!;
         var dbPath = Path.GetFullPath(_options.DatabasePath);
+        _resolvedHostPath = host;
+        _resolvedDatabasePath = dbPath;
         var sw = Stopwatch.StartNew();
         Debug.WriteLine($"[LegacyBridgeDbConnection] Open begin db={dbPath} host={host}");
-        Console.WriteLine($"[LegacyBridgeDbConnection] Open begin db={dbPath}");
 
-        _process = LegacyBridgeBlocking.RunOnDedicatedThread(
-            () => LegacyBridgeProcessSession.StartBlocking(host, dbPath, _options.Password));
+        _process = _options.Pooling
+            ? LegacyBridgeSessionPool.Rent(
+                host,
+                dbPath,
+                _options.Password,
+                _options.MaxPoolSize,
+                _options.PoolIdleTimeout)
+            : LegacyBridgeBlocking.RunOnDedicatedThread(
+                () => LegacyBridgeProcessSession.StartBlocking(host, dbPath, _options.Password));
 
         sw.Stop();
         Debug.WriteLine($"[LegacyBridgeDbConnection] Open end em {sw.ElapsedMilliseconds}ms");
-        Console.WriteLine($"[LegacyBridgeDbConnection] Open end em {sw.ElapsedMilliseconds}ms");
 
         _state = ConnectionState.Open;
     }
@@ -86,11 +126,23 @@ public sealed class LegacyBridgeDbConnection : DbConnection
             ? LegacyBridgeHostLauncher.ResolveHostPath()
             : _options.HostExecutablePath!;
 
-        _process = await LegacyBridgeProcessSession.StartAsync(
-            host,
-            Path.GetFullPath(_options.DatabasePath),
-            _options.Password,
-            cancellationToken: cancellationToken).ConfigureAwait(false);
+        var dbPath = Path.GetFullPath(_options.DatabasePath);
+        _resolvedHostPath = host;
+        _resolvedDatabasePath = dbPath;
+
+        _process = _options.Pooling
+            ? await LegacyBridgeSessionPool.RentAsync(
+                host,
+                dbPath,
+                _options.Password,
+                _options.MaxPoolSize,
+                _options.PoolIdleTimeout,
+                cancellationToken).ConfigureAwait(false)
+            : await LegacyBridgeProcessSession.StartAsync(
+                host,
+                dbPath,
+                _options.Password,
+                cancellationToken: cancellationToken).ConfigureAwait(false);
 
         _state = ConnectionState.Open;
     }
